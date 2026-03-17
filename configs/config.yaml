@@ -1,0 +1,45 @@
+# ==============================================================================
+# Music Genre Classification - Project Configuration
+# ==============================================================================
+
+data:
+  raw_dir: "data/raw"
+  processed_dir: "data/processed"
+  sample_rate: 22050
+  duration: 30          # seconds per audio clip
+  n_mels: 128           # number of mel filter banks
+  hop_length: 512       # hop length for STFT
+  n_fft: 2048           # FFT window size
+  genres:
+    - blues
+    - classical
+    - country
+    - disco
+    - hiphop
+    - jazz
+    - metal
+    - pop
+    - reggae
+    - rock
+
+model:
+  cnn_channels: [32, 64, 128]  # output channels for each CNN block
+  lstm_hidden: 128              # hidden size for BiLSTM
+  lstm_layers: 2                # number of stacked LSTM layers
+  dropout: 0.3                  # dropout probability
+  num_classes: 10               # number of genre classes
+
+training:
+  epochs: 100
+  batch_size: 32
+  learning_rate: 0.001
+  weight_decay: 1.0e-4
+  early_stopping_patience: 10
+  seed: 42
+  val_split: 0.15
+  test_split: 0.15
+
+paths:
+  checkpoint_dir: "outputs/checkpoints"
+  plots_dir: "outputs/plots"
+  best_model_path: "outputs/checkpoints/best_model.pth"
