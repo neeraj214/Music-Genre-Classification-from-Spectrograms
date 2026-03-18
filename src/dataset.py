@@ -1,146 +1,141 @@
-"""
-src/dataset.py - PyTorch Dataset and DataLoader for GTZAN Mel-Spectrograms.
-
-Expects preprocessed .npy files saved under:
-    data/processed/<genre>/<filename>.npy
-
-Each .npy file contains a 2D mel-spectrogram array of shape (n_mels, time_frames).
-
-Classes:
-    GTZANDataset: PyTorch Dataset that loads and returns (spectrogram_tensor, label).
-
-Functions:
-    build_dataloaders: Builds train / val / test DataLoaders from a config dict.
-"""
-
 import os
-import numpy as np
+import json
 import torch
-from torch.utils.data import Dataset, DataLoader, random_split
-from typing import Tuple, Optional, Callable, Dict
+import numpy as np
+import yaml
+from torch.utils.data import Dataset, DataLoader
 
+class SpecAugment(object):
+    """SpecAugment: time and frequency masking augmentation"""
+    def __init__(self, freq_mask_param=15, time_mask_param=35, num_masks=2):
+        self.freq_mask_param = freq_mask_param
+        self.time_mask_param = time_mask_param
+        self.num_masks = num_masks
+
+    def __call__(self, spec):
+        """
+        Applies random freq + time masks to a spectrogram tensor.
+        spec: torch.Tensor of shape (1, n_mels, time_frames)
+        """
+        _, n_mels, n_steps = spec.shape
+        augmented_spec = spec.clone()
+
+        for _ in range(self.num_masks):
+            # Frequency masking
+            f = np.random.randint(0, self.freq_mask_param)
+            f0 = np.random.randint(0, n_mels - f)
+            augmented_spec[:, f0:f0+f, :] = 0
+
+            # Time masking
+            t = np.random.randint(0, self.time_mask_param)
+            t0 = np.random.randint(0, n_steps - t)
+            augmented_spec[:, :, t0:t0+t] = 0
+
+        return augmented_spec
 
 class GTZANDataset(Dataset):
     """
-    PyTorch Dataset for the GTZAN Genre Collection mel-spectrograms.
-
-    Loads pre-computed .npy mel-spectrogram files from a structured directory:
-        root_dir/
-            blues/
-                blues.00000.npy
-                ...
-            classical/
-                ...
-
-    Args:
-        root_dir (str): Path to the processed data directory containing genre subfolders.
-        transform (callable, optional): Optional transform to apply to each spectrogram tensor.
+    GTZAN Dataset for loading preprocessed .npy mel-spectrograms.
     """
-
-    def __init__(
-        self,
-        root_dir: str,
-        genres: list,
-        transform: Optional[Callable] = None,
-    ) -> None:
-        super().__init__()
-        self.root_dir = root_dir
-        self.genres = genres
-        self.genre_to_idx: Dict[str, int] = {g: i for i, g in enumerate(genres)}
-        self.transform = transform
-
-        self.samples = []   # list of (file_path, label_int) tuples
-        self._load_file_list()
-
-    def _load_file_list(self) -> None:
-        """Walk the root_dir and collect all .npy file paths with their genre labels."""
-        for genre in self.genres:
-            genre_dir = os.path.join(self.root_dir, genre)
-            if not os.path.isdir(genre_dir):
-                continue
-            for fname in sorted(os.listdir(genre_dir)):
-                if fname.endswith(".npy"):
-                    fpath = os.path.join(genre_dir, fname)
-                    label = self.genre_to_idx[genre]
-                    self.samples.append((fpath, label))
-        if len(self.samples) == 0:
-            print(
-                f"[Dataset] WARNING: No .npy files found under '{self.root_dir}'. "
-                "Run the preprocessing script first."
-            )
-        else:
-            print(f"[Dataset] Loaded {len(self.samples)} samples from '{self.root_dir}'.")
-
-    def __len__(self) -> int:
-        return len(self.samples)
-
-    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, int]:
+    def __init__(self, split_json_path, config, transform=None):
         """
-        Load a single mel-spectrogram and return it as a float tensor.
-
         Args:
-            idx (int): Sample index.
-
-        Returns:
-            Tuple[torch.Tensor, int]:
-                - spec_tensor: Shape (1, n_mels, time_frames) — channel-first for CNN.
-                - label: Integer genre index.
+            split_json_path (str): Path to the JSON file containing file paths and labels.
+            config (dict): Project configuration.
+            transform (callable, optional): Optional transform to be applied on a sample.
         """
-        fpath, label = self.samples[idx]
-        spec = np.load(fpath).astype(np.float32)          # (n_mels, time_frames)
-        spec_tensor = torch.from_numpy(spec).unsqueeze(0)  # → (1, n_mels, time_frames)
+        with open(split_json_path, 'r') as f:
+            data = json.load(f)
+            
+        self.file_paths = data['files']
+        self.labels = data['labels']
+        self.config = config
+        self.transform = transform
+        self.processed_dir = config['data']['processed_dir']
+        
+        # Build genre-to-index mapping
+        self.genres = config['data']['genres']
+        self.genre_to_idx = {genre: i for i, genre in enumerate(self.genres)}
+        
+        split_name = os.path.basename(split_json_path).split('_')[0]
+        print(f"Loaded {split_name}: {len(self.file_paths)} samples across {len(self.genres)} classes")
 
+    def __len__(self):
+        return len(self.file_paths)
+
+    def __getitem__(self, idx):
+        """
+        Loads the .npy file, adds channel dimension, and applies transforms.
+        Returns: (spectrogram_tensor, label_int)
+        """
+        rel_path = self.file_paths[idx]
+        label = self.labels[idx]
+        
+        abs_path = os.path.join(self.processed_dir, rel_path)
+        
+        # Load .npy
+        mel = np.load(abs_path)
+        
+        # Convert to FloatTensor and add channel dimension (1, n_mels, time_frames)
+        spec_tensor = torch.from_numpy(mel).float().unsqueeze(0)
+        
+        # Apply transform if provided
         if self.transform:
             spec_tensor = self.transform(spec_tensor)
-
+            
+        # Validation
+        assert spec_tensor.shape[0] == 1, f"Expected 1 channel, got {spec_tensor.shape[0]}"
+        assert spec_tensor.shape[1] == self.config['data']['n_mels'], f"Expected {self.config['data']['n_mels']} mels, got {spec_tensor.shape[1]}"
+        
         return spec_tensor, label
 
-
-def build_dataloaders(config: dict) -> Tuple[DataLoader, DataLoader, DataLoader]:
+def build_dataloaders(config):
     """
-    Build train, validation, and test DataLoaders from the project config.
-
-    Splits are performed deterministically using the seed from config.
-
-    Args:
-        config (dict): Parsed config dictionary (from configs/config.yaml).
-
-    Returns:
-        Tuple[DataLoader, DataLoader, DataLoader]:
-            train_loader, val_loader, test_loader
+    Instantiates GTZANDataset for train, val, and test, and returns DataLoaders.
     """
-    processed_dir = config["data"]["processed_dir"]
-    genres = config["data"]["genres"]
-    batch_size = config["training"]["batch_size"]
-    seed = config["training"]["seed"]
-    val_split = config["training"].get("val_split", 0.15)
-    test_split = config["training"].get("test_split", 0.15)
+    data_dir = os.path.dirname(config['data']['processed_dir'])
+    
+    train_json = os.path.join(data_dir, 'train_split.json')
+    val_json = os.path.join(data_dir, 'val_split.json')
+    test_json = os.path.join(data_dir, 'test_split.json')
+    
+    # Check if files exist
+    for p in [train_json, val_json, test_json]:
+        if not os.path.exists(p):
+            raise FileNotFoundError(f"Split file not found: {p}. Run preprocessing first.")
 
-    full_dataset = GTZANDataset(root_dir=processed_dir, genres=genres)
-    total = len(full_dataset)
-
-    n_test = int(total * test_split)
-    n_val = int(total * val_split)
-    n_train = total - n_test - n_val
-
-    generator = torch.Generator().manual_seed(seed)
-    train_set, val_set, test_set = random_split(
-        full_dataset, [n_train, n_val, n_test], generator=generator
+    # Augmentation for training
+    train_transform = SpecAugment(
+        freq_mask_param=config['model']['freq_mask'],
+        time_mask_param=config['model']['time_mask'],
+        num_masks=2
     )
-
-    print(
-        f"[DataLoader] Splits → Train: {len(train_set)} | "
-        f"Val: {len(val_set)} | Test: {len(test_set)}"
-    )
-
+    
+    train_ds = GTZANDataset(train_json, config, transform=train_transform)
+    val_ds = GTZANDataset(val_json, config)
+    test_ds = GTZANDataset(test_json, config)
+    
     train_loader = DataLoader(
-        train_set, batch_size=batch_size, shuffle=True, num_workers=2, pin_memory=True
+        train_ds, 
+        batch_size=config['training']['batch_size'], 
+        shuffle=True, 
+        num_workers=4
     )
     val_loader = DataLoader(
-        val_set, batch_size=batch_size, shuffle=False, num_workers=2, pin_memory=True
+        val_ds, 
+        batch_size=config['training']['batch_size'], 
+        shuffle=False, 
+        num_workers=4
     )
     test_loader = DataLoader(
-        test_set, batch_size=batch_size, shuffle=False, num_workers=2, pin_memory=True
+        test_ds, 
+        batch_size=config['training']['batch_size'], 
+        shuffle=False, 
+        num_workers=4
     )
-
+    
+    # Sanity check
+    batch = next(iter(train_loader))
+    print(f"Sanity Check - Batch shape: {batch[0].shape}, Label shape: {batch[1].shape}")
+    
     return train_loader, val_loader, test_loader

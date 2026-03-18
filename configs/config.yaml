@@ -28,6 +28,8 @@ model:
   lstm_layers: 2                # number of stacked LSTM layers
   dropout: 0.3                  # dropout probability
   num_classes: 10               # number of genre classes
+  freq_mask: 15                 # SpecAugment freq mask param
+  time_mask: 35                 # SpecAugment time mask param
 
 training:
   epochs: 100
