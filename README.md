@@ -5,6 +5,7 @@
 [![Python](https://img.shields.io/badge/Python-3.8%2B-blue?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-EE4C2C?style=flat-square&logo=pytorch&logoColor=white)](https://pytorch.org/)
 [![Librosa](https://img.shields.io/badge/Librosa-Audio_DSP-blueviolet?style=flat-square)](https://librosa.org/)
+[![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](https://opensource.org/licenses/MIT)
 [![GitHub Stars](https://img.shields.io/github/stars/neeraj214/Music-Genre-Classification-from-Spectrograms?style=flat-square&logo=github)](https://github.com/neeraj214/Music-Genre-Classification-from-Spectrograms/stargazers)
 
@@ -123,6 +124,14 @@ python src/train.py --config configs/config.yaml
 python src/evaluate.py --config configs/config.yaml --checkpoint outputs/checkpoints/best_model.pth
 ```
 
+### 7. Run the Frontend UI *(Phase 6)*
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
 ---
 
 ## 🗺️ Phase Roadmap
@@ -134,6 +143,7 @@ python src/evaluate.py --config configs/config.yaml --checkpoint outputs/checkpo
 | **Phase 3** | Data augmentation (SpecAugment, noise, pitch shift) | 🔜 Planned |
 | **Phase 4** | Full training loop with early stopping, LR scheduler | 🔜 Planned |
 | **Phase 5** | Evaluation, per-class metrics, confusion matrix | 🔜 Planned |
+| **Phase 6** | Modern React UI with Tailwind, Framer Motion & Wavesurfer | ✅ Complete |
 
 ---
 
@@ -169,6 +179,10 @@ python src/evaluate.py --config configs/config.yaml --checkpoint outputs/checkpo
 | scikit-learn | Metrics, confusion matrix |
 | Matplotlib | Visualization |
 | Gradio | Interactive demo (Phase 5) |
+| React 18 / Vite | Frontend SPA |
+| Tailwind CSS | UI styling |
+| Framer Motion | UI animations |
+| Wavesurfer.js | Audio waveform visualization |
 | PyYAML | Config file loading |
 
 ---
