@@ -1,84 +1,140 @@
 import React from 'react';
+import { AnimatePresence } from 'framer-motion';
+import { Upload, Activity, BarChart } from 'lucide-react';
+
+// Components
 import Navbar from './components/Navbar';
 import HeroSection from './components/HeroSection';
 import Footer from './components/Footer';
 import UploadZone from './components/UploadZone';
 import WaveformPlayer from './components/WaveformPlayer';
+import LoadingAnimation from './components/LoadingAnimation';
+import GenreResult from './components/GenreResult';
+import SpectrogramView from './components/SpectrogramView';
 
+// Hooks
 import { useAudioUpload } from './hooks/useAudioUpload';
 import { useGenrePrediction } from './hooks/useGenrePrediction';
+
+// Utils
+import { GENRE_COLORS } from './utils/genreColors';
+import { capitalizeGenre } from './utils/formatters';
 
 const App = () => {
   const { file, audioURL, handleFileSelect, handleRemove, error: uploadError } = useAudioUpload();
   const { result, isLoading, error: predictError, predict, reset } = useGenrePrediction();
 
-  const onFileChange = (newFile) => {
-    if (newFile) {
-      handleFileSelect(newFile);
+  const handleFileChange = (selectedFile) => {
+    if (selectedFile) {
+      handleFileSelect(selectedFile);
     } else {
       handleRemove();
     }
-    reset(); // Clear previous predictions when file changes
+    reset(); // reset prediction when file changes
   };
 
+  const handleAnalyze = () => {
+    if (file) {
+      predict(file);
+    }
+  };
+
+  // Convert all_scores object to array for GenreResult if result exists
+  const formattedResult = result ? {
+    ...result,
+    all_scores: Object.entries(result.all_scores).map(([genre, score]) => ({ genre, score }))
+  } : null;
+
+  const genres = Object.keys(GENRE_COLORS);
+
   return (
-    <div className="min-h-screen flex flex-col bg-[#FAFBFF] font-['Inter']">
+    <div className="min-h-screen flex flex-col bg-[#FAFBFF] font-['Inter'] text-slate-800">
       <Navbar />
       
-      <main className="flex-grow">
+      <main className="flex-grow flex flex-col items-center w-full">
         <HeroSection />
         
-        {/* Upload and Player Section */}
-        <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full relative z-10 -mt-10" id="upload-section">
-            <UploadZone 
-              file={file} 
-              onFileSelect={onFileChange} 
-              onAnalyze={() => predict(file)} 
-              isLoading={isLoading} 
-            />
+        {/* Main Content Area */}
+        <div className="w-full max-w-[1200px] mx-auto px-4 flex flex-col gap-8 -mt-10 relative z-10 pb-16">
+          
+          {/* Top Section: Upload vs How It Works */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Left Column: Upload */}
+            <div className="w-full">
+              <UploadZone 
+                file={file} 
+                onFileSelect={handleFileChange} 
+                onAnalyze={handleAnalyze} 
+                isLoading={isLoading} 
+              />
+              {uploadError && <p className="text-red-500 text-center mt-4 font-medium">{uploadError}</p>}
+              {predictError && <p className="text-red-500 text-center mt-4 font-medium">{predictError}</p>}
+            </div>
 
-            {uploadError && <p className="text-red-500 text-center mt-4 font-medium">{uploadError}</p>}
-            {predictError && <p className="text-red-500 text-center mt-4 font-medium">{predictError}</p>}
-
-            {audioURL && (
-              <WaveformPlayer audioURL={audioURL} fileName={file?.name} />
-            )}
-
-            {/* Prediction Results */}
-            {result && (
-              <div className="mt-8 max-w-2xl mx-auto bg-white p-8 rounded-[16px] shadow-[0_4px_24px_rgba(108,99,255,0.10)] border-t-4" style={{ borderColor: '#FF6584' }}>
-                 <h2 className="text-2xl font-[800] mb-6 text-center text-gray-900">Analysis Result</h2>
-                 
-                 <div className="flex justify-center items-baseline gap-3 mb-8">
-                   <span className="text-5xl capitalize font-[800] bg-clip-text text-transparent bg-gradient-to-r from-[#6C63FF] to-[#FF6584]">
-                     {result.predicted_genre}
-                   </span>
-                   <span className="text-xl text-gray-400 font-bold">{(result.confidence * 100).toFixed(1)}%</span>
-                 </div>
-                 
-                 <div className="space-y-4">
-                   <h3 className="font-bold text-gray-700 text-sm uppercase tracking-wider mb-4">Confidence Scores</h3>
-                   {Object.entries(result.all_scores)
-                     .sort(([,a], [,b]) => b - a)
-                     .map(([genre, score]) => (
-                     <div key={genre} className="flex items-center">
-                       <span className="w-24 capitalize text-gray-600 font-medium text-sm">{genre}</span>
-                       <div className="flex-1 h-2.5 bg-gray-100 rounded-full overflow-hidden ml-4">
-                         <div 
-                           className="h-full rounded-full transition-all duration-1000 ease-out" 
-                           style={{ 
-                             width: `${score * 100}%`,
-                             backgroundColor: genre === result.predicted_genre ? '#FF6584' : '#6C63FF'
-                           }}
-                         />
-                       </div>
-                       <span className="w-16 text-right text-xs text-gray-500 font-medium ml-4">{(score * 100).toFixed(1)}%</span>
-                     </div>
-                   ))}
-                 </div>
+            {/* Right Column: How it Works static card */}
+            <div className="bg-white rounded-[16px] shadow-sm border border-slate-100 p-8 w-full h-full flex flex-col justify-between">
+              <div>
+                <h3 className="text-xl font-bold mb-6 text-slate-800">How it works</h3>
+                <ul className="space-y-5 mb-8">
+                  <li className="flex items-center gap-4 text-slate-600 font-medium">
+                    <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-500 shrink-0">
+                      <Upload size={20} />
+                    </div>
+                    <span>Upload your audio file</span>
+                  </li>
+                  <li className="flex items-center gap-4 text-slate-600 font-medium">
+                    <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-500 shrink-0">
+                      <Activity size={20} />
+                    </div>
+                    <span>AI reads the mel spectrogram</span>
+                  </li>
+                  <li className="flex items-center gap-4 text-slate-600 font-medium">
+                    <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-500 shrink-0">
+                      <BarChart size={20} />
+                    </div>
+                    <span>Get genre + confidence scores</span>
+                  </li>
+                </ul>
               </div>
-            )}
-        </section>
+
+              <div>
+                <div className="flex flex-wrap gap-2">
+                  {genres.map((genre) => (
+                    <span 
+                      key={genre}
+                      className="px-3 py-1 text-sm font-semibold rounded-full"
+                      style={{ 
+                        color: GENRE_COLORS[genre], 
+                        backgroundColor: `${GENRE_COLORS[genre]}26` // ~15% opacity hex
+                      }}
+                    >
+                      {capitalizeGenre(genre)}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Conditional Components managed by AnimatePresence */}
+          <div className="flex flex-col gap-8 w-full items-center">
+            <AnimatePresence mode="wait">
+              {audioURL && <WaveformPlayer key="waveform" audioURL={audioURL} fileName={file?.name} />}
+            </AnimatePresence>
+
+            <AnimatePresence mode="wait">
+              {isLoading && <LoadingAnimation key="loading" />}
+            </AnimatePresence>
+
+            <AnimatePresence mode="wait">
+              {formattedResult && !isLoading && <GenreResult key="genre-result" result={formattedResult} />}
+            </AnimatePresence>
+
+            <AnimatePresence mode="wait">
+              {formattedResult && !isLoading && <SpectrogramView key="spectrogram" spectrogramData={formattedResult?.spectrogram || null} />}
+            </AnimatePresence>
+          </div>
+        </div>
       </main>
 
       <Footer />
