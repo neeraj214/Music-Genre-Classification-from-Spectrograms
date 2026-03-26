@@ -54,3 +54,8 @@ MANIFEST
 *.log
 *.tmp
 *.bak
+
+# Frontend dependencies and cache
+frontend/node_modules/
+node_modules/
+.vite/
