@@ -1,12 +1,12 @@
 /**
  * @file UploadZone.jsx
- * @description Drag-and-drop audio upload zone with validation and an analyze button.
+ * @description Drag-and-drop audio upload zone with glow, ripple, and gradient animations.
  */
 
 import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { motion, useReducedMotion } from 'framer-motion';
-import { Upload, X, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { Upload, X, Loader2, CheckCircle2 } from 'lucide-react';
 
 const UploadZone = ({ onFileSelect, onAnalyze, file, isLoading }) => {
   const shouldReduceMotion = useReducedMotion();
@@ -25,7 +25,6 @@ const UploadZone = ({ onFileSelect, onAnalyze, file, isLoading }) => {
       }
       return;
     }
-
     if (acceptedFiles && acceptedFiles.length > 0) {
       onFileSelect(acceptedFiles[0]);
     }
@@ -37,11 +36,11 @@ const UploadZone = ({ onFileSelect, onAnalyze, file, isLoading }) => {
       'audio/mpeg': ['.mp3'],
       'audio/wav': ['.wav'],
       'audio/ogg': ['.ogg'],
-      'audio/flac': ['.flac']
+      'audio/flac': ['.flac'],
     },
     maxSize: 10 * 1024 * 1024,
     multiple: false,
-    disabled: isLoading
+    disabled: isLoading,
   });
 
   const handleRemove = (e) => {
@@ -58,98 +57,297 @@ const UploadZone = ({ onFileSelect, onAnalyze, file, isLoading }) => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const bounceTransition = shouldReduceMotion ? {} : {
-    y: {
-      duration: 1.5,
-      repeat: Infinity,
-      repeatType: "reverse",
-      ease: "easeInOut"
-    }
-  };
+  const isDisabled = !file || isLoading;
 
   return (
-    <div className="bg-white rounded-[16px] shadow-[0_4px_24px_rgba(108,99,255,0.10)] p-6 max-w-2xl mx-auto font-['Inter']">
-      {!file ? (
-        <div 
-          {...getRootProps()} 
-          className={`border-2 border-dashed rounded-[12px] p-8 text-center cursor-pointer transition-colors ${
-            isDragActive ? 'border-[#6C63FF] bg-[#F0EEFF]' : 'border-[rgba(108,99,255,0.4)] hover:bg-gray-50'
-          } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-        >
-          <input {...getInputProps()} />
-          
-          <motion.div 
-            className="flex justify-center mb-4 text-[#6C63FF]"
-            animate={shouldReduceMotion ? false : { y: [0, -10, 0] }}
-            transition={bounceTransition}
-          >
-            <Upload size={48} strokeWidth={1.5} />
-          </motion.div>
+    <div
+      className="glass-card gradient-border"
+      style={{ padding: '32px', maxWidth: '640px', margin: '0 auto', transition: 'all 0.3s ease' }}
+    >
+      {/* ── Drop Area ─────────────────────────────────── */}
+      <motion.div
+        {...getRootProps()}
+        whileHover={shouldReduceMotion ? {} : { scale: 1.01 }}
+        style={{
+          border: isDragActive
+            ? '2px solid rgba(108,99,255,0.7)'
+            : '2px dashed rgba(108,99,255,0.3)',
+          borderRadius: 'var(--radius-md)',
+          padding: '48px 32px',
+          background: isDragActive ? 'rgba(108,99,255,0.06)' : 'rgba(108,99,255,0.02)',
+          textAlign: 'center',
+          cursor: isLoading ? 'not-allowed' : 'pointer',
+          opacity: isLoading ? 0.6 : 1,
+          transition: 'all 0.3s ease',
+          position: 'relative',
+          boxShadow: isDragActive ? '0 0 0 4px rgba(108,99,255,0.15)' : 'none',
+        }}
+      >
+        <input {...getInputProps()} />
 
-          <p className="text-gray-900 font-[800] text-lg mb-1">
-            Drop your audio file here
-          </p>
-          <p className="text-gray-500 mb-6 font-medium">
-            or click to browse
-          </p>
-          
-          <div className="inline-block px-3 py-1 bg-gray-100 rounded-full text-xs text-gray-600 font-medium">
-            MP3 &middot; WAV &middot; OGG &middot; FLAC
-          </div>
-        </div>
-      ) : (
-        <div className="border border-gray-200 rounded-[12px] p-4 flex items-center justify-between bg-gray-50">
-          <div className="flex items-center space-x-3 overflow-hidden">
-            <div className="bg-[#E5E0FF] text-[#6C63FF] p-2 rounded-lg shrink-0">
-              <Upload size={24} />
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-[800] text-gray-900 truncate">
+        <AnimatePresence mode="wait">
+          {!file ? (
+            <motion.div
+              key="empty"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              {/* Upload icon with ripple */}
+              <div style={{ position: 'relative', display: 'inline-block', marginBottom: '20px' }}>
+                {/* Ripple rings */}
+                {!shouldReduceMotion && (
+                  <>
+                    <span className="upload-ripple" style={{ animationDelay: '0s' }} />
+                    <span className="upload-ripple" style={{ animationDelay: '0.6s' }} />
+                  </>
+                )}
+                {/* Icon circle */}
+                <div
+                  className="animate-bounce-soft"
+                  style={{
+                    width: 80,
+                    height: 80,
+                    borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #6C63FF 0%, #8B5CF6 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    position: 'relative',
+                    zIndex: 1,
+                  }}
+                >
+                  <Upload size={32} color="#fff" strokeWidth={2} />
+                </div>
+              </div>
+
+              <p style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '6px' }}>
+                Drop your audio file here
+              </p>
+              <p
+                style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '20px', cursor: 'pointer' }}
+                className="browse-link"
+              >
+                or click to browse
+              </p>
+
+              {/* Format badge */}
+              <div
+                className="glass-card"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '6px 16px',
+                  borderRadius: 'var(--radius-full)',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                }}
+              >
+                <span style={{ color: '#6C63FF' }}>MP3</span>
+                <span style={{ color: 'var(--text-muted)' }}>|</span>
+                <span style={{ color: '#FF6584' }}>WAV</span>
+                <span style={{ color: 'var(--text-muted)' }}>|</span>
+                <span style={{ color: '#38F9D7' }}>OGG</span>
+                <span style={{ color: 'var(--text-muted)' }}>|</span>
+                <span style={{ color: '#F9A826' }}>FLAC</span>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="selected"
+              initial={{ opacity: 0, scale: 0.92 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.92 }}
+              transition={{ type: 'spring', stiffness: 200, damping: 18 }}
+              style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}
+            >
+              {/* Checkmark */}
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: 'spring', stiffness: 260, damping: 16, delay: 0.1 }}
+                style={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #43E97B 0%, #38F9D7 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: '4px',
+                }}
+              >
+                <CheckCircle2 size={32} color="#fff" strokeWidth={2.5} />
+              </motion.div>
+
+              {/* Filename */}
+              <p
+                className="gradient-text"
+                style={{
+                  fontWeight: 700,
+                  fontSize: '16px',
+                  maxWidth: '320px',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+                title={file.name}
+              >
                 {file.name}
               </p>
-              <p className="text-xs text-gray-500 font-medium">
+
+              {/* File size */}
+              <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
                 {formatSize(file.size)}
               </p>
-            </div>
-          </div>
-          <button 
-            type="button" 
-            onClick={handleRemove}
-            disabled={isLoading}
-            className="p-2 text-gray-400 hover:text-red-500 transition-colors disabled:opacity-50 shrink-0"
-            aria-label="Remove file"
+
+              {/* Remove button */}
+              <motion.button
+                type="button"
+                onClick={handleRemove}
+                disabled={isLoading}
+                whileHover={shouldReduceMotion ? {} : { backgroundColor: 'rgba(239,68,68,0.15)' }}
+                whileTap={shouldReduceMotion ? {} : { scale: 0.9 }}
+                aria-label="Remove file"
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: '1px solid rgba(239,68,68,0.25)',
+                  background: 'transparent',
+                  cursor: isLoading ? 'not-allowed' : 'pointer',
+                  color: '#ef4444',
+                  transition: 'background 0.2s',
+                  marginTop: '4px',
+                }}
+              >
+                <X size={16} />
+              </motion.button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+
+      {/* ── Error Message ──────────────────────────────── */}
+      <AnimatePresence>
+        {errorMsg && (
+          <motion.div
+            initial={{ opacity: 0, x: 0 }}
+            animate={
+              shouldReduceMotion
+                ? { opacity: 1 }
+                : { opacity: 1, x: [0, 10, -10, 10, -10, 0] }
+            }
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              marginTop: '14px',
+              padding: '6px 14px',
+              borderRadius: 'var(--radius-full)',
+              background: 'rgba(239,68,68,0.1)',
+              border: '1px solid rgba(239,68,68,0.25)',
+              color: '#ef4444',
+              fontSize: '13px',
+              fontWeight: 500,
+            }}
           >
-            <X size={20} />
-          </button>
-        </div>
-      )}
+            <X size={14} />
+            {errorMsg}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {errorMsg && (
-        <p className="text-red-500 text-sm mt-4 text-center font-medium">
-          {errorMsg}
-        </p>
-      )}
-
+      {/* ── Analyze Button ─────────────────────────────── */}
       <motion.button
         type="button"
         onClick={onAnalyze}
-        disabled={!file || isLoading}
-        className={`w-full mt-6 py-4 rounded-[12px] text-white font-[600] flex justify-center items-center gap-2 transition-opacity ${
-          (!file || isLoading) ? 'opacity-50 cursor-not-allowed' : ''
-        }`}
-        style={{ backgroundImage: 'linear-gradient(to right, #6C63FF, #8B5CF6)' }}
-        whileHover={(!file || isLoading || shouldReduceMotion) ? {} : { scale: 1.02 }}
-        whileTap={(!file || isLoading || shouldReduceMotion) ? {} : { scale: 0.97 }}
+        disabled={isDisabled}
+        whileHover={
+          isDisabled || shouldReduceMotion
+            ? {}
+            : { scale: 1.02, boxShadow: '0 8px 32px rgba(108,99,255,0.4)' }
+        }
+        whileTap={isDisabled || shouldReduceMotion ? {} : { scale: 0.97 }}
+        className={isLoading ? 'btn-analyze btn-analyze--loading' : 'btn-analyze'}
+        style={{
+          width: '100%',
+          height: '56px',
+          marginTop: '20px',
+          borderRadius: 'var(--radius-md)',
+          border: 'none',
+          background: isDisabled
+            ? 'linear-gradient(135deg, #6C63FF 0%, #FF6584 100%)'
+            : 'linear-gradient(135deg, #6C63FF 0%, #FF6584 100%)',
+          backgroundSize: '200% auto',
+          color: '#fff',
+          fontWeight: 700,
+          fontSize: '16px',
+          letterSpacing: '0.02em',
+          cursor: isDisabled ? 'not-allowed' : 'pointer',
+          opacity: isDisabled ? 0.4 : 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '10px',
+          position: 'relative',
+          overflow: 'hidden',
+          transition: 'background-position 0.4s ease, box-shadow 0.3s ease',
+        }}
       >
+        {/* Shimmer overlay during loading */}
+        {isLoading && (
+          <span
+            className="animate-shimmer"
+            style={{
+              position: 'absolute',
+              inset: 0,
+              pointerEvents: 'none',
+            }}
+          />
+        )}
+
         {isLoading ? (
           <>
-            <Loader2 className="animate-spin" size={20} />
-            Analyzing...
+            <Loader2
+              size={20}
+              color="#fff"
+              style={{
+                animation: 'spin-slow 0.8s linear infinite',
+                flexShrink: 0,
+              }}
+            />
+            <span>Analyzing...</span>
           </>
         ) : (
           'Analyze Genre'
         )}
       </motion.button>
+
+      {/* ── Ripple CSS (scoped) ────────────────────────── */}
+      <style>{`
+        .upload-ripple {
+          position: absolute;
+          top: 0; left: 0;
+          width: 80px; height: 80px;
+          border-radius: 50%;
+          border: 2px solid rgba(108,99,255,0.5);
+          animation: ripple 2s ease-out infinite;
+          pointer-events: none;
+        }
+        .browse-link:hover { text-decoration: underline; }
+        .btn-analyze:not(:disabled):hover { background-position: right center; }
+        @keyframes spin-slow {
+          from { transform: rotate(0deg); }
+          to   { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 };
