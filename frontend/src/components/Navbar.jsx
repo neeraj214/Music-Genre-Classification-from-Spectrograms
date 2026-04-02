@@ -1,12 +1,10 @@
-/**
- * @file Navbar.jsx
- * @description Sticky navbar that goes glass on scroll. Mobile hamburger menu with
- * AnimatePresence overlay. Framer Motion entrance animation.
- */
-
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { Menu, X, Github } from 'lucide-react';
+
+// Wrap Link with motion for animation support on routing links
+const MotionLink = motion(Link);
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -34,13 +32,12 @@ const Navbar = () => {
   };
 
   const links = [
-    { label: 'Home', href: '#' },
-    { label: 'About', href: '#about' },
+    { label: 'Home', href: '/' },
+    { label: 'Analyze', href: '/analyze' },
   ];
 
   return (
     <>
-      {/* ── Main Navbar ── */}
       <motion.nav
         style={{ ...navStyle, position: 'sticky', top: 0, zIndex: 100, height: 68 }}
         initial={{ opacity: 0, y: -20 }}
@@ -51,7 +48,7 @@ const Navbar = () => {
           <div className="flex items-center justify-between h-full">
 
             {/* ── Logo ── */}
-            <div className="flex items-center gap-2">
+            <Link to="/" className="flex items-center gap-2" style={{ textDecoration: 'none' }}>
               <motion.svg
                 className="animate-bounce-soft"
                 width="28" height="28" viewBox="0 0 24 24"
@@ -84,14 +81,14 @@ const Navbar = () => {
               }}>
                 Beta
               </span>
-            </div>
+            </Link>
 
             {/* ── Desktop Links ── */}
             <div className="hidden md:flex items-center gap-6">
               {links.map((link) => (
-                <a
+                <Link
                   key={link.label}
-                  href={link.href}
+                  to={link.href}
                   style={{
                     fontSize: 14,
                     color: '#6E6D7A',
@@ -105,10 +102,9 @@ const Navbar = () => {
                   onMouseLeave={e => { e.currentTarget.style.color = '#6E6D7A'; }}
                 >
                   {link.label}
-                </a>
+                </Link>
               ))}
 
-              {/* GitHub icon */}
               <a
                 href="https://github.com/neeraj214/Music-Genre-Classification-from-Spectrograms"
                 target="_blank"
@@ -128,8 +124,8 @@ const Navbar = () => {
               </a>
 
               {/* Try Now CTA */}
-              <motion.a
-                href="#upload"
+              <MotionLink
+                to="/analyze"
                 whileHover={{ scale: 1.05, boxShadow: '0 8px 24px rgba(108,99,255,0.4)' }}
                 whileTap={{ scale: 0.95 }}
                 style={{
@@ -145,7 +141,7 @@ const Navbar = () => {
                 }}
               >
                 Try Now
-              </motion.a>
+              </MotionLink>
             </div>
 
             {/* ── Mobile Hamburger ── */}
@@ -182,7 +178,6 @@ const Navbar = () => {
               gap: 32,
             }}
           >
-            {/* Close button */}
             <button
               onClick={() => setMobileOpen(false)}
               aria-label="Close menu"
@@ -199,25 +194,44 @@ const Navbar = () => {
               <X size={28} />
             </button>
 
-            {[...links, { label: 'GitHub', href: 'https://github.com/neeraj214/Music-Genre-Classification-from-Spectrograms' }].map((link) => (
-              <a
-                key={link.label}
-                href={link.href}
-                onClick={() => setMobileOpen(false)}
-                style={{
-                  fontSize: 28,
-                  fontWeight: 700,
-                  color: '#0F0E17',
-                  textDecoration: 'none',
-                  fontFamily: "'Space Grotesk', sans-serif",
-                }}
-              >
-                {link.label}
-              </a>
+            {[...links, { label: 'GitHub', href: 'https://github.com/neeraj214/Music-Genre-Classification-from-Spectrograms', external: true }].map((link) => (
+              link.external ? (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setMobileOpen(false)}
+                  style={{
+                    fontSize: 28,
+                    fontWeight: 700,
+                    color: '#0F0E17',
+                    textDecoration: 'none',
+                    fontFamily: "'Space Grotesk', sans-serif",
+                  }}
+                >
+                  {link.label}
+                </a>
+              ) : (
+                <Link
+                  key={link.label}
+                  to={link.href}
+                  onClick={() => setMobileOpen(false)}
+                  style={{
+                    fontSize: 28,
+                    fontWeight: 700,
+                    color: '#0F0E17',
+                    textDecoration: 'none',
+                    fontFamily: "'Space Grotesk', sans-serif",
+                  }}
+                >
+                  {link.label}
+                </Link>
+              )
             ))}
 
-            <motion.a
-              href="#upload"
+            <MotionLink
+              to="/analyze"
               onClick={() => setMobileOpen(false)}
               whileTap={{ scale: 0.95 }}
               style={{
@@ -231,7 +245,7 @@ const Navbar = () => {
               }}
             >
               Try Now
-            </motion.a>
+            </MotionLink>
           </motion.div>
         )}
       </AnimatePresence>
