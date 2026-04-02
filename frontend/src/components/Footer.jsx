@@ -1,47 +1,90 @@
-/**
- * @file Footer.jsx
- * @description Footer component displaying tech stack pills and github link.
- */
-
 import React from 'react';
+import { motion } from 'framer-motion';
 
 const Footer = () => {
-  const techPills = ['PyTorch', 'librosa', 'React', 'Framer Motion'];
+  const techPills = ['PyTorch', 'librosa', 'React', 'Framer Motion', 'Recharts'];
+  const links = ['GitHub', 'Documentation', 'About'];
 
   return (
-    <footer className="bg-[#F9FAFB] py-12 px-4 sm:px-6 lg:px-8 font-['Inter']">
-      <div className="max-w-7xl mx-auto flex flex-col items-center">
-        
-        <p className="text-gray-600 mb-6 flex items-center justify-center gap-2 text-center">
-          <span>Built with CNN + BiLSTM</span>
-          <span className="text-gray-300">&bull;</span>
-          <span>PyTorch</span>
-          <span className="text-gray-300">&bull;</span>
-          <span>React</span>
-        </p>
+    <footer 
+      className="relative text-white py-[60px] px-6 font-['Inter']"
+      style={{
+        background: 'linear-gradient(135deg, #0F0E17 0%, #1a1830 100%)',
+        zIndex: 10
+      }}
+    >
+      <style>{`
+        .hover-gradient-link:hover {
+          background: linear-gradient(135deg, #6C63FF 0%, #FF6584 50%, #38F9D7 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+      `}</style>
+      
+      {/* Animated gradient accent line at the top */}
+      <div 
+        className="absolute top-0 left-0 right-0 h-[3px] animate-gradient"
+        style={{
+          background: 'linear-gradient(90deg, #6C63FF, #FF6584, #38F9D7, #6C63FF)',
+          backgroundSize: '300% 100%'
+        }}
+      />
 
-        <div className="flex flex-wrap justify-center gap-3 mb-8">
+      <div className="max-w-7xl mx-auto flex flex-col items-center text-center">
+        
+        {/* Logo and Tagline */}
+        <div className="mb-10">
+          <div className="text-3xl font-[900] tracking-tight mb-2" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+            Genre<span style={{ color: '#6C63FF' }}>AI</span>
+          </div>
+          <p className="text-white/60 font-medium text-sm">AI-powered music genre classification</p>
+        </div>
+
+        {/* Divider */}
+        <div 
+          className="w-1/2 h-[1px] mb-10"
+          style={{ background: 'linear-gradient(90deg, transparent, #6C63FF, #FF6584, #38F9D7, transparent)' }}
+        />
+
+        {/* Tech Stack Pills */}
+        <div className="flex flex-wrap justify-center gap-3 mb-12">
           {techPills.map((tech) => (
-            <span 
-              key={tech} 
-              className="bg-white border border-[#E5E7EB] text-gray-700 px-4 py-1.5 rounded-full text-sm font-medium shadow-sm hover:shadow transition-shadow"
+            <motion.span 
+              key={tech}
+              whileHover={{ scale: 1.05, backgroundColor: 'rgba(255,255,255,0.1)' }}
+              className="px-4 py-1.5 rounded-full text-sm font-semibold border border-white/20 text-white/80 transition-colors"
+              style={{ backgroundColor: 'transparent', cursor: 'default' }}
             >
               {tech}
-            </span>
+            </motion.span>
           ))}
         </div>
 
-        <a
-          href="https://github.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-gray-400 hover:text-gray-900 transition-colors"
-          aria-label="GitHub Repository"
-        >
-          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.699-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.161 22 16.416 22 12c0-5.523-4.477-10-10-10z" />
-          </svg>
-        </a>
+        {/* Links row */}
+        <div className="flex flex-wrap justify-center gap-8 mb-16 text-sm font-bold tracking-wide">
+          {links.map((link) => (
+            <a
+              key={link}
+              href={link === 'GitHub' ? "https://github.com/neeraj214/Music-Genre-Classification-from-Spectrograms" : "#"}
+              target={link === 'GitHub' ? "_blank" : undefined}
+              rel={link === 'GitHub' ? "noopener noreferrer" : undefined}
+              className="text-white hover-gradient-link transition-all duration-300"
+            >
+              {link}
+            </a>
+          ))}
+        </div>
+
+        {/* Bottom Bar */}
+        <div className="flex flex-col items-center gap-2">
+          <p className="text-white/80 font-semibold text-sm">
+            Built with CNN + BiLSTM &middot; Made by neeraj214
+          </p>
+          <p className="text-white/40 text-xs font-medium tracking-wide border-t border-white/10 pt-4 mt-2 w-48 text-center">
+            &copy; {new Date().getFullYear()}
+          </p>
+        </div>
 
       </div>
     </footer>
