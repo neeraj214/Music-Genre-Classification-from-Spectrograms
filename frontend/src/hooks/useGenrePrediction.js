@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { predictGenre } from '../api/predict';
 
-const MOCK_MODE = true;
+const MOCK_MODE = false;
 
 /**
  * Custom hook for managing genre prediction.
