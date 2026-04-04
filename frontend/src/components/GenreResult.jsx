@@ -27,7 +27,7 @@ const AnimatedCounter = ({ value }) => {
 };
 
 export default function GenreResult({ result }) {
-  const { predicted_genre, confidence, all_scores, execution_times } = result;
+  const { predicted_genre, confidence, all_scores, processing_time_ms, model_version } = result;
   
   const color = GENRE_COLORS[predicted_genre] || '#6C63FF';
   const emoji = GENRE_EMOJIS[predicted_genre] || '🎵';
@@ -39,15 +39,6 @@ export default function GenreResult({ result }) {
   // Get 2nd and 3rd place securely, just in case array is short
   const secondPlace = sortedScores[1] || null;
   const thirdPlace = sortedScores[2] || null;
-
-  // Process timing
-  const totalTime = execution_times?.total 
-    ? (execution_times.total > 1 ? execution_times.total.toFixed(2) : (execution_times.total * 1000).toFixed(0)) 
-    : null;
-  
-  const timeLabel = execution_times?.total 
-    ? (execution_times.total > 1 ? 's' : 'ms') 
-    : '';
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -86,11 +77,6 @@ export default function GenreResult({ result }) {
       {/* ── Section Title Row ──────────────────────── */}
       <div className="flex justify-between items-center px-2">
         <h2 className="text-3xl font-[900] text-gray-900 tracking-tight">Your Result</h2>
-        {totalTime && (
-          <div className="bg-white px-4 py-1.5 rounded-full border border-gray-100 shadow-sm text-sm font-semibold text-gray-500">
-            Analyzed in {totalTime}{timeLabel}
-          </div>
-        )}
       </div>
 
       {/* ── TOP: Prediction Hero Card ────────────────── */}
@@ -158,11 +144,18 @@ export default function GenreResult({ result }) {
               fontSize: '18px',
               fontWeight: 700,
               boxShadow: `0 8px 24px ${color}40`,
-              marginBottom: '24px'
+              marginBottom: processing_time_ms ? '12px' : '24px'
             }}
           >
             <AnimatedCounter value={confidence} />
           </div>
+
+          {/* Processing Time Info Row */}
+          {processing_time_ms && (
+            <div style={{ fontSize: '13px', color: '#6B7280', marginBottom: '24px', fontWeight: 500 }}>
+              Analyzed in {(processing_time_ms / 1000).toFixed(1)}s &nbsp;&middot;&nbsp; Model v{model_version || '1.0.0'}
+            </div>
+          )}
 
           {/* Runner ups */}
           <div className="flex gap-4">
