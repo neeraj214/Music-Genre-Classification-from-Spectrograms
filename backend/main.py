@@ -2,6 +2,8 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import config
+from routers.predict import router as predict_router
+from services.model_service import model_service
 
 app = FastAPI(
     title="Music Genre Classification API",
@@ -16,8 +18,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(predict_router)
+
 @app.on_event("startup")
 async def startup_event():
+    model_service.load_model()
     print(f"GenreAI API starting on http://localhost:8000")
 
 @app.get("/")
@@ -26,8 +31,7 @@ def read_root():
 
 @app.get("/health")
 def health_check():
-    # TODO: Actual model loading check in the future
-    return {"status": "healthy", "model_loaded": False}
+    return {"status": "healthy", "model_loaded": model_service.is_model_available()}
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host=config.HOST, port=config.PORT, reload=True)
