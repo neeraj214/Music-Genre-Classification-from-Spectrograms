@@ -26,20 +26,23 @@ model:
   cnn_channels: [32, 64, 128]  # output channels for each CNN block
   lstm_hidden: 128              # hidden size for BiLSTM
   lstm_layers: 2                # number of stacked LSTM layers
-  dropout: 0.3                  # dropout probability
+  dropout: 0.4                  # Slightly higher for better generalization
   num_classes: 10               # number of genre classes
   freq_mask: 15                 # SpecAugment freq mask param
   time_mask: 35                 # SpecAugment time mask param
 
 training:
   epochs: 100
-  batch_size: 32
+  batch_size: 16          # IMPORTANT: keep at 16 for 4GB VRAM
   learning_rate: 0.001
   weight_decay: 1.0e-4
-  early_stopping_patience: 10
+  early_stopping_patience: 15
   seed: 42
   val_split: 0.15
   test_split: 0.15
+  num_workers: 2          # Windows: keep at 2 (not 4)
+  mixed_precision: true   # Use float16 to save VRAM
+  gradient_clip: 1.0      # Prevents gradient explosion
 
 paths:
   checkpoint_dir: "outputs/checkpoints"
