@@ -50,29 +50,40 @@ Mel-Spectrogram  (128 mel bins × ~1292 frames)
 ```
 Music-Genre-Classification-from-Spectrograms/
 │
+├── backend/                  # FastAPI Backend API for inference
+│   ├── routers/              # API routes (prediction & metadata)
+│   ├── services/             # Core ML inference services
+│   ├── main.py               # API entry point
+│   └── requirements_backend.txt
+│
+├── configs/
+│   └── config.yaml           # All hyperparameters, paths, and genre list
+│
 ├── data/
 │   ├── raw/                  # Raw GTZAN .wav files (not tracked by Git)
 │   └── processed/            # Preprocessed .npy mel-spectrograms (not tracked)
 │
-├── src/
-│   ├── __init__.py
-│   ├── dataset.py            # GTZANDataset + build_dataloaders()
-│   ├── model.py              # MusicCNNRNN architecture + get_model()
-│   ├── train.py              # Training loop (Phase 4)
-│   ├── evaluate.py           # Evaluation + confusion matrix (Phase 5)
-│   └── utils.py              # set_seed, plot_spectrogram, plot_loss_curves, load_config
+├── frontend/                 # React + Vite Frontend UI
+│   ├── src/                  # React components & pages
+│   ├── package.json          # Node dependencies
+│   └── vite.config.js
 │
 ├── notebooks/
 │   └── 01_eda.ipynb          # Exploratory Data Analysis
-│
-├── configs/
-│   └── config.yaml           # All hyperparameters, paths, and genre list
 │
 ├── outputs/
 │   ├── checkpoints/          # Saved model weights (not tracked by Git)
 │   └── plots/                # Loss curves, confusion matrices
 │
-├── requirements.txt
+├── src/
+│   ├── __init__.py
+│   ├── dataset.py            # GTZANDataset + build_dataloaders()
+│   ├── model.py              # MusicCNNRNN architecture + get_model()
+│   ├── train.py              # Training loop
+│   ├── evaluate.py           # Evaluation + confusion matrix
+│   └── utils.py              # Utilities
+│
+├── requirements.txt          # Core ML requirements
 ├── .gitignore
 └── README.md
 ```
@@ -106,25 +117,33 @@ data/raw/
   ...
 ```
 
-### 4. Preprocess audio → Spectrograms *(Phase 2)*
+### 4. Preprocess audio → Spectrograms
 
 ```bash
 python src/preprocess.py --config configs/config.yaml
 ```
 
-### 5. Train the model *(Phase 4)*
+### 5. Train the model
 
 ```bash
 python src/train.py --config configs/config.yaml
 ```
 
-### 6. Evaluate *(Phase 5)*
+### 6. Evaluate
 
 ```bash
 python src/evaluate.py --config configs/config.yaml --checkpoint outputs/checkpoints/best_model.pth
 ```
 
-### 7. Run the Frontend UI *(Phase 6)*
+### 7. Run the FastAPI Backend API
+
+```bash
+cd backend
+pip install -r requirements_backend.txt
+python main.py
+```
+
+### 8. Run the React Frontend UI
 
 ```bash
 cd frontend
@@ -139,10 +158,10 @@ npm run dev
 | Phase | Description | Status |
 |-------|-------------|--------|
 | **Phase 1** | Project structure, configs, model skeleton, dataset class | ✅ Complete |
-| **Phase 2** | Audio preprocessing: `.wav` → mel-spectrogram `.npy` files | 🔜 Up Next |
-| **Phase 3** | Data augmentation (SpecAugment, noise, pitch shift) | 🔜 Planned |
-| **Phase 4** | Full training loop with early stopping, LR scheduler | 🔜 Planned |
-| **Phase 5** | Evaluation, per-class metrics, confusion matrix | 🔜 Planned |
+| **Phase 2** | Audio preprocessing: `.wav` → mel-spectrogram `.npy` files | ✅ Complete |
+| **Phase 3** | Data augmentation (SpecAugment, noise, pitch shift) | ✅ Complete |
+| **Phase 4** | Full training loop with early stopping, LR scheduler | ✅ Complete |
+| **Phase 5** | Evaluation, per-class metrics, confusion matrix | ✅ Complete |
 | **Phase 6** | Modern React UI with Tailwind, Framer Motion & Wavesurfer | ✅ Complete |
 
 ---
@@ -157,33 +176,20 @@ npm run dev
 
 ---
 
-## 📊 Results *(to be filled after Phase 5)*
-
-| Metric | Value |
-|--------|-------|
-| Test Accuracy | — |
-| Val Loss (best) | — |
-| Training Epochs | — |
-
-*Confusion matrix and loss curves will be added after training.*
-
----
-
 ## 🛠️ Tech Stack
 
 | Tool | Purpose |
 |------|---------|
 | PyTorch 2.0+ | Model definition, training, inference |
 | Librosa 0.10+ | Audio loading and mel-spectrogram extraction |
-| NumPy | Numerical preprocessing |
-| scikit-learn | Metrics, confusion matrix |
-| Matplotlib | Visualization |
-| Gradio | Interactive demo (Phase 5) |
-| React 18 / Vite | Frontend SPA |
-| Tailwind CSS | UI styling |
-| Framer Motion | UI animations |
-| Wavesurfer.js | Audio waveform visualization |
-| PyYAML | Config file loading |
+| FastAPI | Backend API for classification |
+| React 18 / Vite | Modern Web Frontend |
+| Tailwind CSS | Premium styling and design system |
+| Framer Motion | Smooth UI transitions and animations |
+| Wavesurfer.js | Dynamic audio visualization |
+| scikit-learn | Metrics, evaluation, confusion matrix |
+| Matplotlib | Visualizations & curves |
+| PyYAML | Configuration management |
 
 ---
 
