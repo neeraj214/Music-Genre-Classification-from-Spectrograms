@@ -197,3 +197,11 @@ npm run dev
   <i>Built with ❤️ by <a href="https://github.com/neeraj214">Neeraj</a></i><br/>
   🎸 🥁 🎹 🎻 🎺 🎶
 </div>
+
+---
+
+## 🚫 Why This Project Is Not Deployed Online
+
+- **Heavy ML Model Dependencies**: The application uses a complex deep learning CNN + Bi-LSTM model built with PyTorch, which is resource-intensive for standard free-tier hosting platforms.
+- **Audio Processing Requirements**: Processing and converting `.wav` uploads to mel-spectrograms on the fly requires system libraries (e.g., `librosa`, `libsndfile`) which are optimized for local system execution.
+
